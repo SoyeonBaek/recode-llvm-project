@@ -854,10 +854,14 @@ public:
   ///
   template <class DT>
   void addLiteralOption(StringRef Name, const DT &V, StringRef HelpStr) {
-    assert(findOption(Name) == Values.size() && "Option already exists!");
+      errs() << Name << "\n";
+      if(findOption(Name) == Values.size()){
+
+    assert(findOption(Name) == Values.size() && (std::string("Option already exists!") + Name.str()).c_str());
     OptionInfo X(Name, static_cast<DataType>(V), HelpStr);
     Values.push_back(X);
     AddLiteralOption(Owner, Name);
+    }
   }
 
   /// removeLiteralOption - Remove the specified option.

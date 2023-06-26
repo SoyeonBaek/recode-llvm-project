@@ -106,9 +106,7 @@ static cl::opt<bool> Flattening("fla", cl::init(false),              //tofix
 static cl::opt<bool> BogusControlFlow("bcf", cl::init(false),
                                       cl::desc("Enable bogus control flow"));
 
-static cl::opt<string> testFunc("func", cl::desc("input Target Function Name To Run Fuzzer"), cl::value_desc("target function"), cl::Required);
-
-static cl::opt<bool> Substitution("testGen", cl::init(false),
+static cl::opt<bool> Substitution("test", cl::init(false),
                                   cl::desc("Enable instruction substitutions"));
 
 static cl::opt<bool> Split("split", cl::init(false),
@@ -570,7 +568,7 @@ void PassManagerBuilder::populateModulePassManager(
   MPM.add(createBogusPass(BogusControlFlow));
   MPM.add(createFlatteningPass(Flattening));
   MPM.add(createStringObfuscationPass(StringObf));
-  MPM.add(createSubstitutionPass(Substitution, testFunc));
+  MPM.add(createSubstitutionPass(Substitution));
 
   // If all optimizations are disabled, just run the always-inline pass and,
   // if enabled, the function merging pass.

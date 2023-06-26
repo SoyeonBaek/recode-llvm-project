@@ -147,6 +147,7 @@ public:
     // Add existing passes to option.
     for (RegistryClass *Node = RegistryClass::getList();
          Node; Node = Node->getNext()) {
+        //errs() << "addLiteralOption " << Node->getName() << "\n";
       this->addLiteralOption(Node->getName(),
                       (typename RegistryClass::FunctionPassCtor)Node->getCtor(),
                              Node->getDescription());
@@ -159,6 +160,8 @@ public:
   // Implement the MachinePassRegistryListener callbacks.
   void NotifyAdd(StringRef N, typename RegistryClass::FunctionPassCtor C,
                  StringRef D) override {
+      //errs() << "addLiteralOption " << N << "\n";
+
     this->addLiteralOption(N, C, D);
   }
   void NotifyRemove(StringRef N) override {

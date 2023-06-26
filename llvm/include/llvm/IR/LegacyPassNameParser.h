@@ -46,7 +46,7 @@ public:
 
   void initialize() {
     cl::parser<const PassInfo*>::initialize();
-
+    
     // Add all of the passes to the map that got initialized before 'this' did.
     enumeratePasses();
   }
@@ -72,6 +72,7 @@ public:
            << P->getPassArgument() << ") attempted to be registered!\n";
       llvm_unreachable(nullptr);
     }
+    //  errs() << "passRegistered " << P->getPassName() << " : " << P->getPassArgument().data() << "\n";
     addLiteralOption(P->getPassArgument().data(), P, P->getPassName().data());
   }
   void passEnumerate(const PassInfo *P) override { passRegistered(P); }
