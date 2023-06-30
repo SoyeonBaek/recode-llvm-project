@@ -31,6 +31,7 @@
 
 #include <vector>
 #include <tuple>
+#include <set>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -40,18 +41,14 @@ using namespace llvm;
 using namespace std;
 
 static cl::opt<string> Input("i2", cl::desc("file to analyze"), cl::value_desc("filename to analyze"), cl::Required);
-#define DEBUG_TYPE "hello"
-STATISTIC(HelloCounter, "Counts number of functions greeted");
 
-
-vector<tuple<BasicBlock*, string>> v;
-string ctxt;
+vector<tuple<BasicBlock*, string, string>> v;
+set<string> s;
 
 namespace {
-  // Hello - The first implementation, without getAnalysisUsage.
-  struct Hello : public FunctionPass {
-    static char ID; // Pass identification, replacement for typeid
-    Hello() : FunctionPass(ID) {}
+  struct Deob : public FunctionPass {
+    static char ID;
+    Deob() : FunctionPass(ID) {}
 
     bool has_ctxt(BasicBlock* bb, string ctxt)
     {
@@ -66,12 +63,7 @@ namespace {
       }
     }
 
-    void erase_bb_from_predeccessor(BasicBlock* succ, BasicBlock* pred)
-    {
-      
-    }
-
-    string find_next_ctxt (BasicBlock* bb){
+    string find_next_ctxt (string bb_name, string ctxt){
 
       return "";
     }
@@ -81,6 +73,80 @@ namespace {
       ValueToValueMapTy vmap;
       return CloneBasicBlock(bb, vmap);
     }
+
+	bool runOnFunction(Function &F) override 
+	{
+	  //insert tuple <cloned_entry_bb, entry_ctxt> into queue
+	  BasicBlock *entry_bb = clone(&F.getEntryBlock());
+	  string entry_ctxt = "";
+	  tuple<BasicBLock*, string> t(entry_bb, entry_ctxt, &F.getEntryBlock().getName());
+	  v.push_back(t);
+
+
+	  //loop until the queue empty
+	  while(v.empty())
+	  {
+		//pop current bb and ctxt from queue
+		tuple<BasicBlock*, string, string> t = v.front();
+		pop_front(v);
+		//current bb
+		BasicBlock* bb = get<0>(t);
+		//current ctxt
+		auto ctxt = get<1>(t);
+
+
+		//continue if the current_bb already visited
+		//should check original bb not cloned one
+		if(s.find(get<2>(t)) != s.end())
+		  continue;
+		s.insert(get<2>(t));
+		
+		
+
+
+		//search next_bbs of the current_bb
+		Instruction* i = bb->getTerminator();
+		int n = i->getNumSuccessors();
+		for (int k = 0; k < n; k++)
+		{
+		  BasicBlock* bb_next = i->getSuccessor(n);
+		  bool flag = false;
+	  
+		  //if <bb_next, current_ctxt> exist
+		  //clone bb_next and insert as a successor of the current_bb
+		  //and push it into the queue
+		  if(has_ctxt(bb_next, ctxt))
+		  {
+			BasicBlock* next = clone(bb_next);
+			i->setTerminator(k, next);
+			tuple<BasicBlock*, string, string> t(next, ctxt, bb_next.getName());
+			v.push_back(t);
+			flag = true;
+		  }
+		}
+		
+		//if no <bb_next, current_ctxt> matched
+		//get next_ctxt via abstract memory
+		if(!flag)
+		{
+		  
+		}
+		
+
+	  }
+	  
+
+
+	  
+
+	  return true;
+	}
+
+char Deob::ID = 0;
+static RegisterPass<Deob> X("deob", "Flattened bitcode deobfuscating Pass");
+
+
+
 
     bool runOnFunction(Function &F) override {
       bool Changed = false;
@@ -149,8 +215,6 @@ namespace {
 }
 
 
-char Hello::ID = 0;
-static RegisterPass<Hello> X("hello", "Hello World Pass");
 
 
 
@@ -162,32 +226,8 @@ static RegisterPass<Hello> X("hello", "Hello World Pass");
 
 
 
-namespace {
-  // Hello2 - The second implementation with getAnalysisUsage implemented.
-  struct Hello2 : public FunctionPass {
-    static char ID; // Pass identification, replacement for typeid
-    Hello2() : FunctionPass(ID) {}
-      
-    //call ocaml library function
-    //find_nexts
-    //remove later
-      vector<int> find_nexts (string bb_name) {
-          vector<int> v = {};
-          if (bb_name == "%22")
-            v = {1,3};
-          if (bb_name == "%9")
-            v = {4};
-          if (bb_name == "%10")
-            v = {4};    
-          if (bb_name == "%16")
-            v = {4,0};    
-          if (bb_name == "%23")
-            v = {5};    
-          return v;
-      }
-
-    bool runOnFunction(Function &F) override {
-      printf("53");
+//    bool runOnFunction(Function &F) override {
+//      printf("53");
       
 //       if (initialized == 0) {  
 //       std::error_code ec;
@@ -278,8 +318,3 @@ namespace {
     }
   };
 }
-
-char Hello2::ID = 0;
-static RegisterPass<Hello2>
-Y("hello2", "Hello World Pass (with getAnalysisUsage implemented)");
-

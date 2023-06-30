@@ -854,7 +854,7 @@ public:
   ///
   template <class DT>
   void addLiteralOption(StringRef Name, const DT &V, StringRef HelpStr) {
-      errs() << Name << "\n";
+//      errs() << Name << "\n";
       if(findOption(Name) == Values.size()){
 
     assert(findOption(Name) == Values.size() && (std::string("Option already exists!") + Name.str()).c_str());
